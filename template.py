@@ -1,9 +1,11 @@
-# Template: https://realpython.com/python-advent-of-code/#a-starting-template
+# Original template: https://realpython.com/python-advent-of-code/#a-starting-template
+# Modified by @vintydong
 import pathlib
 import sys
 
 def parse(puzzle_input):
     """Parse puzzle"""
+    return puzzle_input.split('\n')
 
 def part1(data):
     """Solve part 1."""
@@ -20,6 +22,10 @@ def solve(puzzle_input):
     return solution1, solution2
 
 if __name__ == "__main__":
-    puzzle_input = pathlib.Path('input.txt').read_text().strip()
+    path = 'input.txt'
+    if len(sys.argv) > 1 and sys.argv[1]:
+        path = 'input2.txt'
+
+    puzzle_input = pathlib.Path(path).read_text().strip()
     solutions = solve(puzzle_input)
     print("\n".join(str(solution) for solution in solutions))
