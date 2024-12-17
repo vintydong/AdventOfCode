@@ -98,74 +98,39 @@ def move_boxes_part2(grid, dir, box) -> bool:
     dx, dy = dir
     bx, by = box
 
-    is_up = by + dy > by
+    seen = set()
 
-    if grid[by][bx] != '[' and grid[by][bx] != ']':
-        raise RuntimeError(f"No box at {(by, bx)}; it is {grid[by][bx]}")
+    # Check a single part of box movable
+    def check_movable(box):
+        if box in seen:
+            return True
+        seen.add(box)
+        x, y = box
 
-    # symbolic left, right representing the ends of the span of boxes when up/down
-    vertical_move = False
-    if dir == (0, 1) or dir == (0, -1):
-        vertical_move = True
-        if grid[by][bx] == '[':
-            left, right = bx, bx+1
-        elif grid[by][bx] == ']':
-            left, right = bx-1, bx
-    else:
-        left, right = bx, bx
-
-    tempx, tempy = bx, by
-
-    while True:
-        if vertical_move:
-            tl = left
-            tr = right
-            all_empty = True
-            while tl < tr + 1:
-                if grid[tempy][tl] == '#':
-                    return False
-                if grid[tempy][tl] != '.':
-                    all_empty = False
-                tl += 1
-
-            if all_empty:
-                break
-            
-            # handle disconnected cases; no need to expand window
-            if grid[tempy][left] == ']' and grid[tempy-dy][left] in '[]':
-                left = left - 1
-            if grid[tempy][right] == '[' and grid[tempy-dy][right] in '[]':
-                right = right + 1
-        else:
-            if grid[tempy][tempx] == '#':
+        match grid[y+dy][x+dx]:
+            case '#':
                 return False
-            elif grid[tempy][tempx] == '.':
-                break
-        tempx += dx
-        tempy += dy
+            case '[':
+                return check_movable((x+dx, y+dy)) and check_movable((x+dx+1, y+dy))
+            case ']':
+                return check_movable((x+dx, y+dy)) and check_movable((x+dx-1, y+dy))
+            case '.': 
+                return True
+        return True
     
-    # Go backwards, moving boxes forwards
-    tempx, tempy = tempx - dx, tempy - dy
-    while grid[tempy][tempx] == '[' or grid[tempy][tempx] == ']' or (vertical_move and (is_up and tempy > by or not is_up and tempy < by)):
-        if vertical_move:
-            tx = left
-            while tx < right + 1:
-                if grid[tempy][tx] == ']' and tx == left:
-                    tx += 1 
-                    continue
-                if grid[tempy][tx] == '[' and tx == right:
-                    tx += 1
-                    continue
-                if grid[tempy][tx] in '[]':
-                    grid[tempy+dy][tx+dx] = grid[tempy][tx]
-                    grid[tempy][tx] = '.'
-                tx += 1
-        elif grid[tempy][tempx] == '[' or grid[tempy][tempx] == ']':
-            grid[tempy+dy][tempx+dx] = grid[tempy][tempx]
-            grid[tempy][tempx] = '.'
-
-        tempx -= dx
-        tempy -= dy
+    if not check_movable((bx-dx, by-dy)):
+        return False
+    
+    while len(seen) > 0:
+        print(seen)
+        for x, y in seen.copy():
+            nx, ny = x + dx, y + dy
+            if (nx, ny) not in seen:
+                if grid[ny][nx] != '@' and grid[y][x] != '@':
+                    grid[ny][nx] = grid[y][x]
+                    grid[y][x] = '.'
+                seen.remove((x,y))
+    
     return True
 
 i = 0
@@ -178,7 +143,7 @@ def run_part2(grid, start, moves):
     }
 
     x, y = start
-    STARTING_MOVE = 111111
+    STARTING_MOVE = 12435123
     global i
 
     for move in moves:
