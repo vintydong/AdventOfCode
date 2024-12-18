@@ -34,31 +34,47 @@ def get_moves(grid, cell, facing):
     avail = [dirs[index], dirs[(index-1) % 4], dirs[(index+1) % 4]]
     moves = []
     for dx, dy in avail:
-        if (-1 < x + dx < n and -1 < y + dy < m) and grid[y+dy][x+dx] != '#' :
-            moves.append((x+dx,y+dy))
+        if (dx, dy) == facing:
+            if (-1 < x + dx < n and -1 < y + dy < m) and grid[y+dy][x+dx] != '#' :
+                moves.append(((x+dx,y+dy), (dx,dy), 1))
+        else:
+            moves.append(((x,y), (dx,dy), 1000))
     return moves
 
-def dijkstras(grid, start):
-    seen = {}
+def dijkstras(grid, start, end):
+    from heapq import heappop, heappush
+    seen = {start: 0}
     predecessors = {}
     facing = (1,0)
-    queue = deque([(start, 0, facing, None)])
+    queue = [(0, start, facing)]
     while len(queue):
-        node, cost, facing, prev = queue.popleft()
-        if node not in seen or cost < seen[node]:
-            seen[node] = cost
-            predecessors[node] = set([prev] if prev is not None else [])
-        elif cost == seen[node]:
-            predecessors[node].add(prev)
-        else:
-            continue
+        cost, node, facing = heappop(queue)
+
+        if node == end:
+            break
+
         moves = get_moves(grid, node, facing)
-        for m in moves:
-            if m == tuple((node[i] + facing[i] for i in range(2))):
-                queue.append((m, cost+1, facing, node))
+        for next_node, next_dir, weight in moves:
+            if (next_node, next_dir) not in seen or cost + weight < seen[(next_node, next_dir)]:
+                seen[(next_node, next_dir)] = cost + weight
+                predecessors[(next_node, next_dir)] = {(node, facing)}
+                heappush(queue, (cost + weight, next_node, next_dir))
+            elif cost + weight == seen[(next_node, next_dir)]:
+                predecessors[(next_node, next_dir)].add((node, facing))
             else:
-                queue.append((m, cost+1001, tuple((m[i] - node[i] for i in range(2))), node))
-    return seen, predecessors
+                continue
+    
+    best_path_tiles = set()
+    queue = [(node, facing)]
+    while len(queue) > 0:
+        state = queue.pop()
+        if state[0] == start:
+            continue
+        best_path_tiles.add(state)
+        queue.extend(predecessors.get(state, []))
+    
+    best_path_tiles = set([state[0] for state in best_path_tiles])
+    return cost, len(best_path_tiles) + 1
 
 def print_disjkstras(grid, seen):
     grid = [[c for c in line] for line in grid]
@@ -79,23 +95,16 @@ def print_best_tiles(grid, best_tiles):
 def part1(data):
     """Solve part 1."""
     start, end = get_start_end(data, s="S", e="E")
-    seen, predecessors = dijkstras(data, start)
-    print_disjkstras(data, seen)
-    return seen[end]
+    cost, _ = dijkstras(data, start, end)
+    # print_disjkstras(data, seen)
+    return cost
 
 def part2(data):
     """Solve part 2."""
     start, end = get_start_end(data, s="S", e="E")
-    seen, predecessors = dijkstras(data, start)
+    _, num_tiles = dijkstras(data, start, end)
 
-    best_path_tiles = set()
-    queue = [end]
-    while len(queue) > 0:
-        node = queue.pop()
-        best_path_tiles.add(node)
-        queue.extend(predecessors.get(node, []))
-    print_best_tiles(data, best_path_tiles)
-    return len(best_path_tiles)
+    return num_tiles
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
