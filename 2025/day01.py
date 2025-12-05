@@ -1,6 +1,13 @@
 import pathlib
 import sys
 
+'''
+Part 1: Check for end results of 0 (mod 100)
+Part 2: Check for passing 0 (mod 100)
+
+Needed to account for double counting when moving left from 0
+'''
+
 def parse(puzzle_input):
     """Parse puzzle"""
     return puzzle_input.split('\n')

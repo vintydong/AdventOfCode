@@ -1,6 +1,13 @@
 import pathlib
 import sys
 
+'''
+Part 1: Brute force on checking invalid id patterns n=2 repeats
+Part 2: Brute force also on n repeats
+
+Can be done using regex and backreferences
+'''
+
 def parse(puzzle_input):
     """Parse puzzle"""
     return puzzle_input.split(',')
