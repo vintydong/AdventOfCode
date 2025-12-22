@@ -1,6 +1,12 @@
 import pathlib
 import sys
 
+'''
+Part 1: Simple parsing the rows
+Part 2: Split on the symbols and parse the columns up to next symbol
+'''
+
+
 def parse(puzzle_input):
     """Parse puzzle"""
     print(len(puzzle_input[-1]))
